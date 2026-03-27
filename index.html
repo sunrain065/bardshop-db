@@ -635,19 +635,6 @@
     display: none;
   }
 
-  /* ── 平板 / Z Fold 展開（600~900px） ── */
-  @media (min-width: 601px) and (max-width: 900px) {
-    .layout { grid-template-columns: 160px 1fr; }
-    .sidebar { padding: 16px 10px; }
-    .cat-btn { font-size: 12px; padding: 6px 8px; }
-    .main { padding: 16px; }
-    .product-grid {
-      grid-template-columns: repeat(var(--grid-cols, 3), 1fr);
-      gap: 12px;
-    }
-    .card-name { font-size: 12px; }
-  }
-
   @media (max-width: 600px) {
     /* 隱藏側邊欄 */
     .layout { grid-template-columns: 1fr; }
@@ -3146,11 +3133,15 @@ function setGridCols(n) {
   document.documentElement.style.setProperty('--grid-cols', n);
 }
 
-// 初始化預設欄數（依螢幕寬度）
+// 初始化預設欄數（桌機4，手機2）
 document.addEventListener('DOMContentLoaded', () => {
+  // 重置匯出按鈕狀態（防止 outerHTML 凍結導致卡在「處理中」）
+  const btnExport = document.getElementById('btn-export-full');
+  if (btnExport) { btnExport.disabled = false; btnExport.textContent = '🚀 匯出完整版'; }
+
   const sel = document.getElementById('grid-cols-select');
-  const w = window.innerWidth;
-  const defaultCols = w < 600 ? '2' : w < 900 ? '3' : '4';
+  const isMobile = window.innerWidth < 700;
+  const defaultCols = isMobile ? '2' : '4';
   if (sel) {
     sel.value = defaultCols;
     setGridCols(defaultCols);
@@ -3158,11 +3149,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function filterCat(cat) {
-  // 如果詳情頁開著，先關掉
   const page = document.getElementById('detail-page');
-  if (page && page.classList.contains('open')) {
-    closePanel();
-  }
+  if (page && page.classList.contains('open')) closePanel();
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
   document.querySelectorAll('.mobile-cat-chip').forEach(b => {
