@@ -635,6 +635,19 @@
     display: none;
   }
 
+  /* ── 平板 / Z Fold 展開（600~900px） ── */
+  @media (min-width: 601px) and (max-width: 900px) {
+    .layout { grid-template-columns: 160px 1fr; }
+    .sidebar { padding: 16px 10px; }
+    .cat-btn { font-size: 12px; padding: 6px 8px; }
+    .main { padding: 16px; }
+    .product-grid {
+      grid-template-columns: repeat(var(--grid-cols, 3), 1fr);
+      gap: 12px;
+    }
+    .card-name { font-size: 12px; }
+  }
+
   @media (max-width: 600px) {
     /* 隱藏側邊欄 */
     .layout { grid-template-columns: 1fr; }
@@ -816,6 +829,7 @@
           <option value="3">⊞ 3 欄</option>
           <option value="4" selected="">⊞ 4 欄</option>
           <option value="5">⊞ 5 欄</option>
+          <option value="6">⊞ 6 欄</option>
         </select>
         <button class="view-btn active" onclick="setView('grid')" title="格狀">⊞</button>
         <button class="view-btn" onclick="setView('list')" title="列表">≡</button>
@@ -3132,11 +3146,11 @@ function setGridCols(n) {
   document.documentElement.style.setProperty('--grid-cols', n);
 }
 
-// 初始化預設欄數（桌機4，手機2）
+// 初始化預設欄數（依螢幕寬度）
 document.addEventListener('DOMContentLoaded', () => {
   const sel = document.getElementById('grid-cols-select');
-  const isMobile = window.innerWidth < 700;
-  const defaultCols = isMobile ? '2' : '4';
+  const w = window.innerWidth;
+  const defaultCols = w < 600 ? '2' : w < 900 ? '3' : '4';
   if (sel) {
     sel.value = defaultCols;
     setGridCols(defaultCols);
@@ -3144,9 +3158,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function filterCat(cat) {
+  // 如果詳情頁開著，先關掉
+  const page = document.getElementById('detail-page');
+  if (page && page.classList.contains('open')) {
+    closePanel();
+  }
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
-  // also sync mobile chips
   document.querySelectorAll('.mobile-cat-chip').forEach(b => {
     b.classList.toggle('active', b.getAttribute('data-cat') === cat);
   });
