@@ -2463,8 +2463,12 @@ function renderSpecEdit(p) {
   card.innerHTML = `
     <div class="detail-card-title">
       <div class="dct-left"><div class="dct-bar"></div><span class="dct-label" style="font-size:10px;letter-spacing:2px;text-transform:uppercase;">商品規格</span></div>
-      <span style="font-size:11px;color:var(--accent);font-weight:400;">✏️ 編輯模式</span>
+      <div class="dct-right">
+        <button onclick="openTitleStylePanel()" style="background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;">⚙ 標題樣式</button>
+        <span style="font-size:11px;color:var(--accent);font-weight:400;">✏️ 編輯規格中</span>
+      </div>
     </div>
+    <div id="title-style-panel" style="display:none;"></div>
     <div class="spec-edit-grid">
       ${field('起訂量（MOQ）', 'moq', '例：100件起，可不同圖（超過5款圖則酌收費用）', '', 1)}
       <div class="spec-edit-row">
