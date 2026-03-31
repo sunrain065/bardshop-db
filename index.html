@@ -826,10 +826,68 @@
   #bardshop-toast { opacity: 0; }
   /* btn-export/import hidden by JS on load - no CSS override needed */
 
+
+  /* ===== PASSWORD OVERLAY ===== */
+  #bs-pw-overlay {
+    position: fixed; inset: 0; z-index: 99999;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.3s;
+  }
+  #bs-pw-overlay.hidden { opacity: 0; pointer-events: none; }
+  .pw-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px 36px 32px;
+    width: 360px; max-width: 90vw;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.18);
+    display: flex; flex-direction: column; align-items: center; gap: 0;
+    text-align: center;
+  }
+  .pw-logo { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 3px; color: var(--accent); margin-bottom: 6px; }
+  .pw-sub  { font-size: 12px; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 28px; }
+  .pw-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 18px; }
+  .pw-input-row { display: flex; gap: 10px; width: 100%; margin-bottom: 6px; }
+  .pw-input {
+    flex: 1;
+    background: var(--surface2); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 12px 16px;
+    font-size: 18px; letter-spacing: 4px; text-align: center;
+    color: var(--text); outline: none;
+    transition: border-color 0.2s;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+  .pw-input:focus { border-color: var(--accent); }
+  .pw-btn {
+    background: var(--accent); color: #000;
+    border: none; border-radius: 10px;
+    padding: 12px 20px; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+  .pw-btn:hover { opacity: 0.85; }
+  .pw-error { font-size: 12px; color: #ff6b6b; min-height: 18px; margin-top: 4px; }
 </style>
 
 
 
+<!-- ===== PASSWORD OVERLAY ===== -->
+<div id="bs-pw-overlay">
+  <div class="pw-box">
+    <div class="pw-logo">BardShop</div>
+    <div class="pw-sub">內部商品資訊庫</div>
+    <div class="pw-title">請輸入密碼</div>
+    <div class="pw-input-row">
+      <input id="pw-input" type="password" class="pw-input"
+        placeholder="••••"
+        autocomplete="off"
+        onkeydown="if(event.key==='Enter')checkPW()">
+      <button class="pw-btn" onclick="checkPW()">進入</button>
+    </div>
+    <div id="pw-error" class="pw-error"></div>
+  </div>
+</div>
 <header>
   <div>
     <span class="logo" onclick="showAll()" style="cursor:pointer;" title="顯示全部商品">BardShop <span>內部商品資訊庫</span></span>
@@ -3841,6 +3899,46 @@ renderProducts();
   document.readyState === 'loading'
     ? document.addEventListener('DOMContentLoaded', _resetToast)
     : _resetToast();
+
+// ===== PASSWORD GUARD =====
+// Password stored as base64: atob('ODY5MA==') === '8690'
+var _PW_B64 = 'ODY5MA==';
+var _PW_SESSION_KEY = 'bs-pw-ok';
+
+function _initPW() {
+  if (sessionStorage.getItem(_PW_SESSION_KEY) === '1') {
+    var ov = document.getElementById('bs-pw-overlay');
+    if (ov) { ov.classList.add('hidden'); setTimeout(function(){ ov.style.display='none'; }, 300); }
+    return;
+  }
+  // Show overlay, auto-focus input
+  setTimeout(function() {
+    var inp = document.getElementById('pw-input');
+    if (inp) inp.focus();
+  }, 100);
+}
+
+function checkPW() {
+  var inp = document.getElementById('pw-input');
+  var err = document.getElementById('pw-error');
+  if (!inp) return;
+  var val = inp.value;
+  if (val === atob(_PW_B64)) {
+    sessionStorage.setItem(_PW_SESSION_KEY, '1');
+    var ov = document.getElementById('bs-pw-overlay');
+    if (ov) {
+      ov.classList.add('hidden');
+      setTimeout(function(){ ov.style.display = 'none'; }, 300);
+    }
+    if (err) err.textContent = '';
+  } else {
+    if (err) err.textContent = '❌ 密碼錯誤，請再試一次';
+    inp.value = '';
+    inp.focus();
+  }
+}
+
+_initPW();
 })();
 </script>
 
