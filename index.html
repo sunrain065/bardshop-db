@@ -1311,6 +1311,7 @@
         <input type="text" id="search-input" placeholder="搜尋商品名稱..." oninput="renderProducts()">
       </div>
       <div class="view-toggle">
+        <select id="sort-select" onchange="currentSort=this.value;renderProducts()" title="排序方式" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:5px 8px;font-size:12px;cursor:pointer;outline:none;margin-right:6px;"><option value="default">📋 預設排序</option><option value="newest">🆕 新到舊</option><option value="oldest">📅 舊到新</option></select>
         <select id="grid-cols-select" onchange="setGridCols(this.value)" title="每排顯示數量" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:5px 8px;font-size:12px;cursor:pointer;outline:none;">
           <option value="2">⊞ 2 欄</option>
           <option value="3">⊞ 3 欄</option>
@@ -2623,6 +2624,7 @@ const PRODUCTS = [{"id":"uv-badge","name":"客製｜UV胸章 / 別針","url":"ht
 const CAT_ORDER = ['壓克力商品','特殊貼紙/胸章','杯墊/皂墊/地墊','馬克杯/保溫水瓶','掛軸/海報/畫類','電子票證/卡片','數位週邊','衣著服飾','提袋/束口袋','抱枕/玩偶','織品布類','木製商品','皮革製品','金屬製品','包裝/配件'];
 let currentView = 'grid';
 let filterSpecOnly = null; // null = all, true = has spec, false = no spec
+let currentSort = 'default'; // default | newest | oldest
 let activeProduct = null;
 
 // ===== RENDER =====
@@ -2636,7 +2638,11 @@ function getFiltered() {
     if (filterSpecOnly === false && p.hasSpec) return false;
     return true;
   });
-  if (!activeCat && !q) {
+  if (currentSort === 'newest') {
+    result.sort((a,b) => PRODUCTS.indexOf(b) - PRODUCTS.indexOf(a));
+  } else if (currentSort === 'oldest') {
+    result.sort((a,b) => PRODUCTS.indexOf(a) - PRODUCTS.indexOf(b));
+  } else if (!activeCat && !q) {
     result.sort((a,b) => {
       const ai = CAT_ORDER.indexOf(a.cat), bi = CAT_ORDER.indexOf(b.cat);
       return (ai<0?99:ai)-(bi<0?99:bi);
