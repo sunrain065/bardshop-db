@@ -3010,6 +3010,11 @@ function buildAddonHtml(addon, sizeOpts) {
     +'<div class="price-card-header"><span class="price-card-title">💰 加購配件報價（NT￥／件）</span></div>'
     +'<table class="price-table"><thead><tr><th>數量</th><th>單價 (NT￥)</th></tr></thead>'
     +'<tbody id="addon-price-tbody"></tbody></table>'
+    +'<div class="price-moq">最低起訂量：25 件</div></div>'
+    +'<div class="price-card" id="combined-price-card" style="display:none;border-color:rgba(255,167,38,0.5);">'
+    +'<div class="price-card-header"><span class="price-card-title" style="color:#ffa726;">💰 立牌＋配件 合計（NT￥／件）</span></div>'
+    +'<table class="price-table"><thead><tr><th>數量</th><th>合計單價 (NT￥)</th></tr></thead>'
+    +'<tbody id="combined-price-tbody"></tbody></table>'
     +'<div class="price-moq">最低起訂量：25 件</div></div>';
 }
 
@@ -3183,6 +3188,31 @@ function sizeOptDelete(idx) {
   if (list) list.innerHTML = current.map((opt, i) => renderSizeOptRow(opt, i)).join('');
 }
 
+// ── 將 chip 標籤正規化成 _pricing.sizes 的鍵格式 ──
+// 例：'7x7cm (底座4x4cm)' → '7×7 cm'
+function normalizeSizeLabel(label) {
+  var s = label.split('(')[0].trim();
+  s = s.replace(/(\d)x(\d)/gi, '$1×$2');
+  s = s.replace(/(\d)cm/gi, '$1 cm');
+  return s;
+}
+
+// ── 更新合計報價卡（立牌 + 加購配件） ──
+function updateCombinedPriceCard(pricing, standData, addonPricing, addonSizeData) {
+  var combinedCard = document.getElementById('combined-price-card');
+  var combinedTbody = document.getElementById('combined-price-tbody');
+  if (!combinedCard || !combinedTbody) return;
+  if (!standData || !addonSizeData) { combinedCard.style.display = 'none'; return; }
+  var rows = pricing.tiers.map(function(tier, i) {
+    var sp = standData.prices[i];
+    var ap = addonSizeData.prices[i];
+    if (sp == null || ap == null) return '';
+    return '<tr><td>' + tier + ' 件</td><td class="price-val">$' + (sp + ap) + '</td></tr>';
+  }).join('');
+  combinedTbody.innerHTML = rows;
+  combinedCard.style.display = '';
+}
+
 function selectSizeChip(idx) {
   const clickedChip = document.querySelector('#size-chip-grid .size-chip[data-idx="'+idx+'"]');
   const isAlreadyActive = clickedChip && clickedChip.classList.contains('active');
@@ -3194,6 +3224,8 @@ function selectSizeChip(idx) {
     if (card) card.className = 'pn-card';
     var priceCard = document.getElementById('price-card');
     if (priceCard) priceCard.style.display = 'none';
+    var combinedCard = document.getElementById('combined-price-card');
+    if (combinedCard) combinedCard.style.display = 'none';
     return;
   }
   document.querySelectorAll('#size-chip-grid .size-chip').forEach((el,i) => el.classList.toggle('active', i===idx));
@@ -3217,13 +3249,21 @@ function selectSizeChip(idx) {
   if (priceCard && activeProduct && activeProduct._pricing) {
     var pricing = activeProduct._pricing;
     var label = chip ? chip.textContent.trim() : '';
-    var sizeData = pricing.sizes[label];
+    var sizeData = pricing.sizes[label] || pricing.sizes[normalizeSizeLabel(label)];
     if (sizeData) {
       var tbody = document.getElementById('price-tbody');
       var sampleEl = document.getElementById('price-sample');
       if (sampleEl) sampleEl.textContent = sizeData.sample ? '打樣費 NT￥' + sizeData.sample : '';
       if (tbody) tbody.innerHTML = pricing.tiers.map(function(tier,i){ var p=sizeData.prices[i]; return p!=null?'<tr><td>'+tier+' 件</td><td class="price-val">$'+p+'</td></tr>':''; }).join('');
       priceCard.style.display = '';
+      // ── 若同時有加購配件被選取，更新合計卡 ──
+      var activeAddon = document.querySelector('.addon-chip.active');
+      if (activeAddon && activeProduct._addonPricing) {
+        var addonKeys = Object.keys(activeProduct._addonPricing.sizes);
+        var addonIdx = Array.from(document.querySelectorAll('.addon-chip')).indexOf(activeAddon);
+        var addonSizeData = activeProduct._addonPricing.sizes[addonKeys[addonIdx]];
+        updateCombinedPriceCard(pricing, sizeData, activeProduct._addonPricing, addonSizeData);
+      }
     } else { priceCard.style.display = 'none'; }
   }
 }
@@ -3275,6 +3315,8 @@ function selectAddonChip(idx) {
     clickedChip.classList.remove('active');
     var card = document.getElementById('addon-price-card');
     if (card) card.style.display = 'none';
+    var combinedCard = document.getElementById('combined-price-card');
+    if (combinedCard) combinedCard.style.display = 'none';
     if (pnVal) { pnVal.className = 'pn-hint'; pnVal.textContent = '↓ 點選下方規格後顯示料號'; }
     if (pnCard) pnCard.className = 'pn-card';
     return;
@@ -3300,6 +3342,16 @@ function selectAddonChip(idx) {
   var rows = addon.tiers.map(function(tier,i){ var p=sizeData.prices[i]; return p!=null?'<tr><td>'+tier+' 件</td><td class="price-val">$'+p+'</td></tr>':''; }).join('');
   var card = document.getElementById('addon-price-card');
   if (card) { card.querySelector('#addon-price-tbody').innerHTML = rows; card.style.display=''; }
+  // ── 若同時有立牌尺寸被選取，更新合計卡 ──
+  var activeSizeChip = document.querySelector('#size-chip-grid .size-chip.active');
+  if (activeSizeChip && activeProduct && activeProduct._pricing) {
+    var pricing = activeProduct._pricing;
+    var sizeLabel = activeSizeChip.textContent.trim();
+    var standData = pricing.sizes[sizeLabel] || pricing.sizes[normalizeSizeLabel(sizeLabel)];
+    if (standData) {
+      updateCombinedPriceCard(pricing, standData, addon, sizeData);
+    }
+  }
 }
 function getTitleStyle() {
   try { const r = localStorage.getItem(TITLE_STYLE_KEY); return r ? JSON.parse(r) : {}; } catch(e) { return {}; }
