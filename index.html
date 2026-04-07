@@ -3176,6 +3176,18 @@ function sizeOptDelete(idx) {
 }
 
 function selectSizeChip(idx) {
+  const clickedChip = document.querySelector('#size-chip-grid .size-chip[data-idx="'+idx+'"]');
+  const isAlreadyActive = clickedChip && clickedChip.classList.contains('active');
+  if (isAlreadyActive) {
+    clickedChip.classList.remove('active');
+    const val = document.getElementById('pn-value');
+    const card = document.getElementById('pn-card');
+    if (val) { val.textContent = ''; val.className = ''; }
+    if (card) card.className = 'pn-card';
+    var priceCard = document.getElementById('price-card');
+    if (priceCard) priceCard.style.display = 'none';
+    return;
+  }
   document.querySelectorAll('#size-chip-grid .size-chip').forEach((el,i) => el.classList.toggle('active', i===idx));
   const chip = document.querySelector('#size-chip-grid .size-chip[data-idx="'+idx+'"]');
   const pn = chip ? chip.getAttribute('data-pn') : '';
