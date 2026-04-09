@@ -4727,4 +4727,124 @@ renderProducts();
       <button onclick="annFormat('italic')" style="background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;color:var(--text);font-style:italic;">I</button>
       <button onclick="annFormat('underline')" style="background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;color:var(--text);text-decoration:underline;">U</button>
       <button onclick="annFormat('insertUnorderedList')" style="background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;color:var(--text);">• 清單</button>
-      <button onclick="annFormat('formatBlock','h3')" style="background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4p
+      <button onclick="annFormat('formatBlock','h3')" style="background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;color:var(--text);">標題</button>
+      <button onclick="annFormat('removeFormat')" style="background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;color:var(--text-muted);">清除格式</button>
+      <button onclick="annInsertImage()" style="background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-size:13px;cursor:pointer;color:var(--text);">🖼 插圖</button>
+    </div>
+
+    <!-- 內文編輯區 -->
+    <div id="ann-editor-content"
+      contenteditable="false"
+      style="flex:1;overflow-y:auto;padding:16px 22px;font-size:14px;line-height:1.8;color:var(--text);outline:none;min-height:120px;font-family:'Noto Sans TC',sans-serif;">
+    </div>
+
+    <!-- 自動彈出設定行（僅編輯模式） -->
+    <div id="ann-setting-row" style="display:none;align-items:center;gap:10px;padding:10px 22px;border-top:1px solid var(--border);background:var(--surface2);flex-shrink:0;">
+      <span style="font-size:13px;color:var(--text-muted);">登入後自動彈出公告</span>
+      <div id="ann-toggle-slider"
+        onclick="(function(){var t=document.getElementById('ann-autopop-toggle');t.checked=!t.checked;updateToggleStyle(t);})()"
+        style="width:40px;height:22px;border-radius:11px;background:var(--border);cursor:pointer;position:relative;flex-shrink:0;transition:background 0.2s;">
+        <div style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left 0.2s;pointer-events:none;"></div>
+      </div>
+      <input id="ann-autopop-toggle" type="checkbox" style="display:none;" onchange="updateToggleStyle(this)">
+    </div>
+
+    <!-- 編輯模式 Footer -->
+    <div id="ann-modal-footer" style="display:none;justify-content:flex-end;gap:10px;padding:12px 22px;border-top:1px solid var(--border);flex-shrink:0;">
+      <button onclick="closeAnnModal()" style="padding:8px 20px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text-muted);font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">取消</button>
+      <button onclick="saveAnnouncement()" style="padding:8px 20px;border:none;border-radius:8px;background:#1976d2;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">💾 儲存公告</button>
+    </div>
+
+    <!-- 瀏覽模式 Footer -->
+    <div id="ann-view-footer" style="display:none;justify-content:center;padding:12px 22px;border-top:1px solid var(--border);flex-shrink:0;">
+      <button onclick="closeAnnModal()" style="padding:8px 28px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">關閉</button>
+    </div>
+
+  </div><!-- /#ann-modal -->
+</div><!-- /#ann-modal-overlay -->
+
+<!-- ====== 新增商品 Modal ====== -->
+<div id="add-product-modal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1100;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--surface);border-radius:16px;max-width:520px;width:100%;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,0.35);overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <span style="font-size:16px;font-weight:700;color:var(--text);">➕ 新增商品</span>
+      <button onclick="document.getElementById('add-product-modal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-muted);padding:4px 8px;border-radius:6px;line-height:1;">✕</button>
+    </div>
+    <div style="padding:20px 22px;display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">商品名稱 *</label>
+        <input id="new-prod-name" type="text" placeholder="例：客製｜壓克力立牌" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-size:14px;outline:none;font-family:'Noto Sans TC',sans-serif;">
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">類別 *</label>
+        <select id="new-prod-cat" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-size:14px;outline:none;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">
+          <option value="">— 請選擇類別 —</option>
+          <option value="壓克力商品">壓克力商品</option>
+          <option value="特殊貼紙/胸章">特殊貼紙/胸章</option>
+          <option value="杯墊/皂墊/地墊">杯墊/皂墊/地墊</option>
+          <option value="馬克杯/保溫水瓶">馬克杯/保溫水瓶</option>
+          <option value="掛軸/海報/畫類">掛軸/海報/畫類</option>
+          <option value="電子票證/卡片">電子票證/卡片</option>
+          <option value="數位週邊">數位週邊</option>
+          <option value="衣著服飾">衣著服飾</option>
+          <option value="提袋/束口袋">提袋/束口袋</option>
+          <option value="抱枕/玩偶">抱枕/玩偶</option>
+          <option value="織品布類">織品布類</option>
+          <option value="木製商品">木製商品</option>
+          <option value="皮革製品">皮革製品</option>
+          <option value="金屬製品">金屬製品</option>
+          <option value="包裝/配件">包裝/配件</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">商品頁網址</label>
+        <input id="new-prod-url" type="text" placeholder="https://www.bardshoptw.com/products/..." style="width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-size:14px;outline:none;font-family:'Noto Sans TC',sans-serif;">
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input id="new-prod-new-arrival" type="checkbox" style="width:16px;height:16px;cursor:pointer;accent-color:#1976d2;">
+        <label for="new-prod-new-arrival" style="font-size:14px;color:var(--text);cursor:pointer;">列入 🆕 新品企劃</label>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;padding:12px 22px;border-top:1px solid var(--border);">
+      <button onclick="document.getElementById('add-product-modal').style.display='none'" style="padding:8px 20px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text-muted);font-size:14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">取消</button>
+      <button onclick="saveNewProduct()" style="padding:8px 20px;border:none;border-radius:8px;background:#4caf50;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">✅ 新增</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function saveNewProduct() {
+  var name = (document.getElementById('new-prod-name').value || '').trim();
+  var cat  = (document.getElementById('new-prod-cat').value || '').trim();
+  var url  = (document.getElementById('new-prod-url').value || '').trim();
+  var isNew = document.getElementById('new-prod-new-arrival').checked;
+  if (!name) { showToast('⚠️ 請填寫商品名稱'); return; }
+  if (!cat)  { showToast('⚠️ 請選擇類別'); return; }
+  var id = 'prod-' + Date.now();
+  var newProd = { id:id, name:name, cat:cat, url:url||'', hasSpec:false, moq:'', material:'', size:'', print:[], leadtime:'', notes:'', qa:[], _imgs:[], _pricing:{} };
+  if (isNew) newProd.newArrival = true;
+  PRODUCTS.push(newProd);
+  document.getElementById('add-product-modal').style.display = 'none';
+  document.getElementById('new-prod-name').value = '';
+  document.getElementById('new-prod-cat').value = '';
+  document.getElementById('new-prod-url').value = '';
+  document.getElementById('new-prod-new-arrival').checked = false;
+  renderProducts();
+  showToast('✅ 商品已新增：' + name + '（請記得推送 GitHub 儲存）');
+}
+function updateToggleStyle(chk) {
+  var slider = document.getElementById('ann-toggle-slider');
+  if (!slider) return;
+  var knob = slider.querySelector('div');
+  if (chk.checked) {
+    slider.style.background = '#1976d2';
+    if (knob) knob.style.left = '21px';
+  } else {
+    slider.style.background = 'var(--border)';
+    if (knob) knob.style.left = '3px';
+  }
+}
+</script>
+
+</body>
+</html>
