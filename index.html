@@ -3318,6 +3318,10 @@ function selectGroupChip(groupIdx, optIdx) {
     clickedChip.classList.remove('active');
     var priceCard = document.getElementById('price-card');
     if (priceCard) priceCard.style.display = 'none';
+    var pnCard = document.getElementById('pn-card');
+    var pnValue = document.getElementById('pn-value');
+    if (pnCard) pnCard.className = 'pn-card';
+    if (pnValue) { pnValue.className = 'pn-hint'; pnValue.textContent = '↓ 點選下方規格後顯示料號'; }
     return;
   }
   chips.forEach(function(el,i){ el.classList.toggle('active', i===optIdx); });
@@ -3329,6 +3333,16 @@ function selectGroupChip(groupIdx, optIdx) {
   });
   if (selections.every(Boolean)) {
     var pricingKey = selections.join(' ');
+    var sizeOpts = activeProduct._sizeOpts || [];
+    var matchedOpt = null;
+    for (var si = 0; si < sizeOpts.length; si++) {
+      if (sizeOpts[si].label === pricingKey) { matchedOpt = sizeOpts[si]; break; }
+    }
+    var pn = matchedOpt ? (matchedOpt.partNumber || '') : '';
+    var pnCard = document.getElementById('pn-card');
+    var pnValue = document.getElementById('pn-value');
+    if (pnCard) pnCard.className = pn ? 'pn-card has-value' : 'pn-card';
+    if (pnValue) { pnValue.className = pn ? 'pn-value' : 'pn-hint'; pnValue.textContent = pn || '（此規格尚未設定料號）'; }
     var priceCard = document.getElementById('price-card');
     if (priceCard && activeProduct && activeProduct._pricing) {
       var pricing = activeProduct._pricing;
@@ -3341,6 +3355,11 @@ function selectGroupChip(groupIdx, optIdx) {
         priceCard.style.display = '';
       } else { priceCard.style.display = 'none'; }
     }
+  } else {
+    var pnCard = document.getElementById('pn-card');
+    var pnValue = document.getElementById('pn-value');
+    if (pnCard) pnCard.className = 'pn-card';
+    if (pnValue) { pnValue.className = 'pn-hint'; pnValue.textContent = '↓ 點選下方規格後顯示料號'; }
   }
 }
 
