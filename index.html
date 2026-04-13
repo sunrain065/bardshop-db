@@ -2176,6 +2176,23 @@ const CAT_ORDER = ['壓克力商品','特殊貼紙/胸章','杯墊/皂墊/地墊
     }
   } catch(e) {}
 })();
+const DATA_AREA = [
+  {icon:'✔', label:'商品知識', type:'spec', value:true},
+  {icon:'⚠', label:'過往公告', type:'spec', value:false},
+  {icon:'🔍', label:'全部顯示', type:'all', value:null}
+];
+(function() {
+  try {
+    var saved = localStorage.getItem('_db_data_area');
+    if (saved) {
+      var arr = JSON.parse(saved);
+      if (Array.isArray(arr) && arr.length > 0) {
+        DATA_AREA.length = 0;
+        arr.forEach(function(item){ DATA_AREA.push(item); });
+      }
+    }
+  } catch(e) {}
+})();
 let currentView = 'grid';
 let filterSpecOnly = null; // null = all, true = has spec, false = no spec
 let currentSort = 'default'; // default | newest | oldest
@@ -3926,23 +3943,6 @@ function exportFullHTML() {
   if(t){localStorage.setItem('bs-ann-title',t);}else{localStorage.removeItem('bs-ann-title');}
   if(c){localStorage.setItem('bs-ann-content',c);}else{localStorage.removeItem('bs-ann-content');}
   localStorage.setItem('bs-ann-autopop',a);
-})();
-const DATA_AREA = [
-  {icon:'✔', label:'商品知識', type:'spec', value:true},
-  {icon:'⚠', label:'過往公告', type:'spec', value:false},
-  {icon:'🔍', label:'全部顯示', type:'all', value:null}
-];
-(function() {
-  try {
-    var saved = localStorage.getItem('_db_data_area');
-    if (saved) {
-      var arr = JSON.parse(saved);
-      if (Array.isArray(arr) && arr.length > 0) {
-        DATA_AREA.length = 0;
-        arr.forEach(function(item){ DATA_AREA.push(item); });
-      }
-    }
-  } catch(e) {}
 })();
       // 先清除所有舊的公告初始化腳本（避免每次 export 重複堆疊）
       fullHTML = fullHTML.replace(/<script[^>]*>\s*\(function\(\)\{\s*var t=[\s\S]*?localStorage\.setItem\('bs-ann-autopop'[\s\S]*?\}\)\(\);\s*<\/script>\n?/g, '');
