@@ -3779,61 +3779,78 @@ function addProductImage() {
   showToast(`✅ 已新增第 ${imgs.length} 張圖片`);
 }
 function handleImgFileUpload(event) {
-  if (!activeProduct) { event.target.value=""; return; }
-  var file = event.target.files[0];
-  if (!file) return;
-  var pat = localStorage.getItem("_gh_pat");
-  if (!pat) {
-    showToast("⚠️ 請先設定 GitHub PAT（聯絡管理員）");
-    event.target.value=""; return;
-  }
-  showToast("⏳ 上傳中，請稍候...");
-  var reader = new FileReader();
-  reader.onload = async function(e) {
-    try {
-      var b64 = e.target.result.split(",")[1];
-      var ext = file.type.includes("gif") ? "gif" :
-                file.type.includes("png") ? "png" :
-                (file.type.includes("jpeg")||file.type.includes("jpg")) ? "jpg" : "webp";
-      var fname = activeProduct.id + "." + ext;
-      var repo = "sunrain065/bardshop-db";
-      var apiBase = "https://api.github.com/repos/" + repo + "/contents/assets/images/";
+  if (!activeProduct) { event.target.value=''; return; }
+  var files = Array.from(event.target.files || []);
+  if (!files.length) return;
+  var pat = localStorage.getItem('_gh_pat');
+  if (!pat) { showToast('\u26a0\ufe0f \u8acb\u5148\u8a2d\u5b9a GitHub PAT'); event.target.value=''; return; }
+
+  // Show blob URLs immediately so images appear right away
+  var blobs = [];
+  var readers = files.map((file, idx) => new Promise(resolve => {
+    var reader = new FileReader();
+    reader.onload = e => { blobs[idx] = e.target.result; resolve(); };
+    reader.readAsDataURL(file);
+  }));
+
+  Promise.all(readers).then(() => {
+    // Add blob URLs immediately for instant preview
+    var imgs = getProductImages(activeProduct.id);
+    var allImgs = imgs.concat(blobs);
+    setProductImages(activeProduct.id, allImgs);
+    if (typeof renderImgEditPanel === 'function') renderImgEditPanel();
+    else { try { galleryShow(allImgs, imgs.length); } catch(e){} }
+
+    showToast('\u23f3 \u4e0a\u50b3\u4e2d... (0/' + files.length + ')');
+
+    // Upload each file to GitHub
+    var apiBase = 'https://api.github.com/repos/sunrain065/bardshop-db/contents/assets/images/';
+    var ts = Date.now();
+    var promises = files.map(async (file, idx) => {
+      var ext = file.type.includes('gif') ? 'gif' : file.type.includes('png') ? 'png' :
+                (file.type.includes('jpeg')||file.type.includes('jpg')) ? 'jpg' : 'webp';
+      // Use timestamp + index for unique filenames
+      var fname = activeProduct.id + '_' + ts + (files.length > 1 ? '_' + idx : '') + '.' + ext;
+      var b64 = blobs[idx].split(',')[1];
+      // Check for existing file (to get sha)
       var sha;
       try {
-        var chk = await fetch(apiBase + fname, {headers:{"Authorization":"token "+pat}});
+        var chk = await fetch(apiBase + fname, {headers:{'Authorization':'token '+pat}});
         var cd = await chk.json();
         if (cd.sha) sha = cd.sha;
-      } catch(e2){}
-      var body = {message:"img: upload "+fname, content:b64};
+      } catch(e){}
+      var body = {message:'img: upload '+fname, content:b64};
       if (sha) body.sha = sha;
       var resp = await fetch(apiBase + fname, {
-        method:"PUT",
-        headers:{"Authorization":"token "+pat,"Content-Type":"application/json"},
+        method:'PUT',
+        headers:{'Authorization':'token '+pat,'Content-Type':'application/json'},
         body:JSON.stringify(body)
       });
       var data = await resp.json();
       if (data.content && data.content.sha) {
-        var newUrl = "https://sunrain065.github.io/bardshop-db/assets/images/" + fname;
-        var imgs = getProductImages(activeProduct.id);
-        var filtered = imgs.filter(function(u){ return !u.includes("/assets/images/"+activeProduct.id+"."); });
-        filtered.unshift(newUrl);
-        setProductImages(activeProduct.id, filtered);
-        if (typeof renderImgEditPanel === "function") renderImgEditPanel();
-        else { try { galleryShow(filtered, 0); } catch(ge){} }
-        event.target.value = "";
-        showToast("✅ 上傳成功！");
-      } else {
-        showToast("❌ 上傳失敗：" + (data.message||"未知錯誤"));
-        event.target.value = "";
+        return 'https://sunrain065.github.io/bardshop-db/assets/images/' + fname;
       }
-    } catch(err) {
-      showToast("❌ 錯誤：" + err.message.substring(0,40));
-      event.target.value = "";
-    }
-  };
-  reader.readAsDataURL(file);
-}
+      throw new Error(data.message || '\u672a\u77e5\u932f\u8aa4');
+    });
 
+    Promise.allSettled(promises).then(results => {
+      var ok = results.filter(r => r.status === 'fulfilled').map(r => r.value);
+      var fail = results.filter(r => r.status === 'rejected').length;
+
+      // Replace blob URLs with real GitHub Pages URLs
+      var currentImgs = getProductImages(activeProduct.id);
+      var nonBlobs = currentImgs.filter(u => !u.startsWith('data:'));
+      var finalImgs = nonBlobs.concat(ok);
+      setProductImages(activeProduct.id, finalImgs);
+      if (typeof renderImgEditPanel === 'function') renderImgEditPanel();
+      else { try { galleryShow(finalImgs, nonBlobs.length); } catch(e){} }
+
+      if (ok.length) showToast('\u2705 \u6210\u529f\u4e0a\u50b3 ' + ok.length + ' \u5f35\uff01\u5716\u7247\u7d04 1-2 \u5206\u9418\u5167\u5c31\u5c07\u986f\u793a');
+      if (fail) showToast('\u274c ' + fail + ' \u5f35\u4e0a\u50b3\u5931\u6557');
+      event.target.value = '';
+    });
+  });
+}
 function imgDelete(idx) {
   if (!activeProduct) return;
   const imgs = getProductImages(activeProduct.id);
