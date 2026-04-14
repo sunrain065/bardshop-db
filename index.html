@@ -2193,7 +2193,7 @@ const DATA_AREA = [
     }
   } catch(e) {}
 })();
-l
+
 const PAST_ANNOUNCEMENTS = [];
 (function() {
   try {
@@ -2203,7 +2203,8 @@ const PAST_ANNOUNCEMENTS = [];
       if (Array.isArray(arr)) { PAST_ANNOUNCEMENTS.length=0; arr.forEach(function(item){ PAST_ANNOUNCEMENTS.push(item); }); }
     }
   } catch(e) {}
-})();et currentView = 'grid';
+})();
+let currentView = 'grid';
 let filterSpecOnly = null; // null = all, true = has spec, false = no spec
 let currentSort = 'default'; // default | newest | oldest
 let activeProduct = null;
