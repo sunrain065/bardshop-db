@@ -290,7 +290,7 @@
   .btn-edit-only { /* 編輯模式才顯示的按鈕 */ }
 
   .product-card.is-hidden { opacity: 0.38; filter: grayscale(40%); }
-  .card-edit-actions{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:10;}.card-edit-actions button{width:auto;min-width:auto;padding:6px 10px;height:32px;border-radius:6px;border:none;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;box-shadow:0 2px 6px rgba(0,0,0,0.2);transition:transform 0.15s;}.card-edit-actions button:hover{transform:scale(1.08);}.card-edit-actions .btn-hide{background:#f59e0b;color:white;}.card-edit-actions .btn-delete{background:#ef4444;color:white;}
+  .card-edit-actions{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:10;}.card-edit-actions button{padding:6px 10px;height:30px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:3px;box-shadow:0 2px 6px rgba(0,0,0,0.25);transition:transform 0.15s;white-space:nowrap;line-height:1;}.card-edit-actions button:hover{transform:scale(1.08);}.card-edit-actions .btn-hide{background:#f59e0b;color:#fff;}.card-edit-actions .btn-hide:hover{background:#d97706;}.card-edit-actions .btn-delete{background:#ef4444;color:#fff;}.card-edit-actions .btn-delete:hover{background:#dc2626;}
   .btn-card-action { width: 30px; height: 30px; border-radius: 6px; border: none; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.72); color: #fff; transition: background 0.15s; line-height: 1; }
   .btn-card-action:hover { background: rgba(200,40,40,0.9); }  .logo {
     font-family: 'Bebas Neue', sans-serif;
@@ -4547,11 +4547,10 @@ renderProducts();
   function getHiddenClass(p) { return editUnlocked && _getHiddenIds().has(p.id) ? ' is-hidden' : ''; }
   function getCardEditActions(p) {
     if (!editUnlocked) return "";
-    const isHid = _getHiddenIds().has(p.id);
-    return "<div class=\"card-edit-actions\" onclick=\"event.stopPropagation()\">"
-      + "<button class=\"btn-card-action\" title=\"" + (isHid ? "設為顯示" : "隱藏商品") + "\" onclick=\"toggleHideProduct('" + p.id + "')\">&#128065;</button>"
-      + "<button class=\"btn-card-action\" title=\"刪除商品\" onclick=\"confirmDeleteProduct('" + p.id + "')\">&#128465;</button>"
-      + "</div>";
+    var hidden = _getHiddenIds().has(p.id);
+    var hideBtn = '<button class="btn-hide" onclick="toggleHideProduct(\'' + p.id + '\');event.stopPropagation()">' + (hidden ? '👁️ 顯示' : '👁️ 隱藏') + '</button>';
+    var delBtn = '<button class="btn-delete" onclick="confirmDeleteProduct(\'' + p.id + '\');event.stopPropagation()">🗑️ 刪除</button>';
+    return '<div class="card-edit-actions" onclick="event.stopPropagation()">' + hideBtn + delBtn + '</div>';
   }
   function toggleHideProduct(id) {
     const h = _getHiddenIds();
