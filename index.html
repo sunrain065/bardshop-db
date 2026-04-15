@@ -3032,6 +3032,7 @@ function selectGroupChip(groupIdx, optIdx) {
     if (priceCard && activeProduct && activeProduct._pricing) {
       var pricing = activeProduct._pricing;
       var sizeData = pricing.sizes[pricingKey];
+      if(!sizeData){ var __pkeys = Object.keys(pricing.sizes); if(__pkeys.length === 1) sizeData = pricing.sizes[__pkeys[0]]; }
       if (sizeData) {
         var tbody = document.getElementById('price-tbody');
         var sampleEl = document.getElementById('price-sample');
