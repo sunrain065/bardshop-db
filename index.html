@@ -2675,7 +2675,7 @@ function autoFillPartNoCard(p) {
   var pnValue = document.getElementById('pn-value');
   var pnCard = document.getElementById('pn-card');
   if(!pnValue || !pnCard) return;
-  if(!pnValue.classList.contains('pn-hint')) return;
+  if(!arguments[1] && !pnValue.classList.contains("pn-hint")) return;
   var sizeOpts = getEffectiveSizeOpts(p);
   var optsWithPn = sizeOpts.filter(function(o){ return o.partNumber && o.label.indexOf('加購') === -1; });
   if(optsWithPn.length === 0) return;
@@ -2972,6 +2972,9 @@ function selectSizeChip(idx) {
       }
     } else { priceCard.style.display = 'none'; }
   }
+
+  // After size chip click, also populate partNumber if applicable
+  if (typeof activeProduct !== "undefined") { autoFillPartNoCard(activeProduct, true); }
 }
 
 
@@ -3026,6 +3029,9 @@ function selectGroupChip(groupIdx, optIdx) {
     if (pnCard) pnCard.className = 'pn-card';
     if (pnValue) { pnValue.className = 'pn-hint'; pnValue.textContent = '↓ 點選下方規格後顯示料號'; }
   }
+
+  // After group chip click, also populate single-sizeOpt partNumber if available
+  if (typeof activeProduct !== "undefined") { autoFillPartNoCard(activeProduct, true); }
 }
 
 // ===== TITLE STYLE =====
@@ -4187,7 +4193,7 @@ function openPanel(id) {
     renderNotesEdit(p);
     renderQAEdit(p);
   } else {
-    renderSpecView(p); autoFillPartNoCard(p);
+    renderSpecView(p);
     renderNotesView(p);
     renderQAView(p);
   }
