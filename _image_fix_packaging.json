@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "created": "2026-04-15T08:24:32.518Z",
+    "purpose": "Image fixes for 9 products where slug differs between DB and Shopline"
+  },
+  "urls": {
+    "linen-bag": "https://img.shoplineapp.com/media/image_clips/6749481d924e270011972e47/original.png?1732855836",
+    "fabric-curtain": "https://img.shoplineapp.com/media/image_clips/654cb064b3a549001d6d0fd4/original.png?1699524706",
+    "wood-cutting-board": "https://img.shoplineapp.com/media/image_clips/61d842c67653a9001a800a8c/original.jpg?1641562820",
+    "mdf-scene-stand": "https://img.shoplineapp.com/media/image_clips/68ca95107f15e800109c518d/original.png?1758106895=&amp;owner_id=57b7175f617069114dd11900",
+    "mdf-shape": "https://img.shoplineapp.com/media/image_clips/68ca96ed68648700123c39e6/original.png?1758107372=&amp;owner_id=57b7175f617069114dd11900",
+    "backing-card": "https://img.shoplineapp.com/media/image_clips/65e1690b16156b0020d4845a/original.png?1709271306",
+    "keychain-basic": "https://img.shoplineapp.com/media/image_clips/65d6c1c46618250017c10385/original.png?1708573124",
+    "keychain-special": "https://img.shoplineapp.com/media/image_clips/651aa0590fbf650d8def4d6d/original.png?1696243800",
+    "colorful-chain": "https://img.shoplineapp.com/media/image_clips/65d6c25db42b15001d07229b/original.png?1708573277"
+  }
+}
