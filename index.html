@@ -2668,6 +2668,32 @@ function buildAddonHtml(addon, sizeOpts) {
     +'<div class="price-moq">最低起訂量：25 件</div></div>';
 }
 
+function autoFillPartNoCard(p) {
+  if(!p) return;
+  var pnValue = document.getElementById('pn-value');
+  var pnCard = document.getElementById('pn-card');
+  if(!pnValue || !pnCard) return;
+  if(!pnValue.classList.contains('pn-hint')) return;
+  var sizeOpts = getEffectiveSizeOpts(p);
+  var optsWithPn = sizeOpts.filter(function(o){ return o.partNumber && o.label.indexOf('加購') === -1; });
+  if(optsWithPn.length === 0) return;
+  if(optsWithPn.length === 1) {
+    pnValue.textContent = optsWithPn[0].partNumber;
+    pnValue.className = 'pn-value';
+    pnCard.classList.add('has-value');
+    var lbl = document.getElementById('pn-stand-label');
+    if(lbl) lbl.textContent = '料號（' + optsWithPn[0].label + '）';
+  } else {
+    var html2 = optsWithPn.map(function(o){
+      return '<span style="display:block;font-size:12px;margin:2px 0;"><b>' + escHtml(o.label) + '</b>: ' + escHtml(o.partNumber) + '</span>';
+    }).join('');
+    pnValue.innerHTML = html2;
+    pnValue.className = 'pn-value';
+    pnCard.classList.add('has-value');
+    var lbl2 = document.getElementById('pn-stand-label');
+    if(lbl2) lbl2.textContent = '料號（點選対應尺寸）';
+  }
+}
 function renderSpecView(p) {
   const card = document.getElementById('spec-edit-card');
   if (!card) return;
@@ -4159,7 +4185,7 @@ function openPanel(id) {
     renderNotesEdit(p);
     renderQAEdit(p);
   } else {
-    renderSpecView(p);
+    renderSpecView(p); autoFillPartNoCard(p);
     renderNotesView(p);
     renderQAView(p);
   }
