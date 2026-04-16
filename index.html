@@ -47,7 +47,10 @@
     var initHash = window.location.hash;
     if (initHash && initHash.startsWith('#product-')) {
       var initSlug = initHash.replace('#product-', '');
-      if (typeof PRODUCTS !== 'undefined' && PRODUCTS.some(function(p) { return p.id === initSlug; })) {
+      // 若尚未通過站台密碼驗證，跳過自動開啟面板並清除 hash，避免登入後看到商品頁
+      if (sessionStorage.getItem('bs-pw-ok') !== '1') {
+        history.replaceState(null, '', window.location.pathname);
+      } else if (typeof PRODUCTS !== 'undefined' && PRODUCTS.some(function(p) { return p.id === initSlug; })) {
         setTimeout(function() {
           // 開啟商品後清掉 hash，避免重新整理時又自動跳進來
           history.replaceState({ bardshopPanel: initSlug }, '', window.location.pathname);
