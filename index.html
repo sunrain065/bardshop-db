@@ -2638,34 +2638,64 @@ function getEffectiveSecondSpec(p) {
   const groups = cs || p._specGroups || [];
   return groups[1] || null;
 }
-function render2ndOptRow(opt, i) {
-  return '<div class="size-opt-row" data-spec2idx="' + i + '">'
+function getCustomOptPartnos(id) {
+  try { return JSON.parse(localStorage.getItem('bardshop_optpartnos_' + id) || 'null'); } catch(e) { return null; }
+}
+function saveCustomOptPartnos(id, map) {
+  try {
+    if (map && Object.keys(map).length) localStorage.setItem('bardshop_optpartnos_' + id, JSON.stringify(map));
+    else localStorage.removeItem('bardshop_optpartnos_' + id);
+  } catch(e) {}
+}
+function resolveOptPartno(currentPartno) {
+  if (!activeProduct) return currentPartno;
+  var opn = getCustomOptPartnos(activeProduct.id);
+  if (!opn) return currentPartno;
+  var chips = document.querySelectorAll('.size-chip.active');
+  for (var i = 0; i < chips.length; i++) {
+    var t = (chips[i].textContent || '').trim();
+    if (opn[t]) return opn[t];
+  }
+  return currentPartno;
+}
+function render2ndOptRow(opt, i, pn) {
+  return '<div class="size-opt-row" data-spec2idx="' + i + '" style="display:flex;align-items:center;gap:4px;">'
     + '<input type="text" class="size-opt-input" id="spec2opt-' + i + '" value="'
     + escHtml(opt || '') + '" placeholder="選項，例：單面" style="flex:1;">'
-    + '<button onclick="spec2OptDelete(' + i + ')" style="background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;padding:0 4px;flex-shrink:0;line-height:1;transition:color .15s;" onmouseover="this.style.color=\'#ff6b35\'" onmouseout="this.style.color=\'\'">✕</button>'
+    + '<input type="text" class="size-opt-input" id="spec2pn-' + i + '" value="'
+    + escHtml(pn || '') + '" placeholder="料號（選填）" style="flex:0 0 200px;font-size:12px;color:#666;">'
+    + '<button onclick="spec2OptDelete(' + i + ')" style="background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;padding:0 4px;flex-shrink:0;line-height:1;transition:color .15s;" onmouseover="this.style.color=\'#ff6b35\'" onmouseout="this.style.color=\'\'">\u2715</button>'
     + '</div>';
 }
 function getCurrentSpec2Opts() {
   return Array.from(document.querySelectorAll('[id^="spec2opt-"]')).map(e => e.value.trim());
 }
+function getCurrentSpec2Partnos() {
+  return Array.from(document.querySelectorAll('[id^="spec2pn-"]')).map(e => e.value.trim());
+}
 function getCurrentSpec2Label() {
   var el = document.getElementById('spec2-label');
   return el ? el.value.trim() : '';
 }
-function refresh2ndSpecList(opts) {
+function refresh2ndSpecList(opts, partnos) {
   const el = document.getElementById('spec2-opts-list');
   if (!el) return;
-  el.innerHTML = opts.map((o, i) => render2ndOptRow(o, i)).join('');
+  var pns = partnos || [];
+  el.innerHTML = opts.map((o, i) => render2ndOptRow(o, i, pns[i] || '')).join('');
 }
 function spec2OptAdd() {
   const list = getCurrentSpec2Opts();
+  const pns = typeof getCurrentSpec2Partnos === 'function' ? getCurrentSpec2Partnos() : [];
   list.push('');
-  refresh2ndSpecList(list);
+  pns.push('');
+  refresh2ndSpecList(list, pns);
 }
 function spec2OptDelete(i) {
   const list = getCurrentSpec2Opts();
+  const pns = typeof getCurrentSpec2Partnos === 'function' ? getCurrentSpec2Partnos() : [];
   list.splice(i, 1);
-  refresh2ndSpecList(list);
+  pns.splice(i, 1);
+  refresh2ndSpecList(list, pns);
 }
 
 
@@ -2774,7 +2804,7 @@ function autoFillPartNoCard(p, force) {
       if(p._pricing && p._pricing.sizes){
         for(var si = 0; si < selections.length; si++){
           var sel = selections[si];
-          if(p._pricing.sizes[sel] && p._pricing.sizes[sel].partno){ var __sd=p._pricing.sizes[sel]; if(p._pricing.dynamicPrintMethod && typeof applyPrintMethodOverride==="function"){ __sd=applyPrintMethodOverride(__sd,p._pricing); } showPN(__sd.partno, sel); return; }
+          if(p._pricing.sizes[sel] && p._pricing.sizes[sel].partno){ var __sd=p._pricing.sizes[sel]; if(p._pricing.dynamicPrintMethod && typeof applyPrintMethodOverride==="function"){ __sd=applyPrintMethodOverride(__sd,p._pricing); } else { __sd = Object.assign({}, __sd); __sd.partno = resolveOptPartno(__sd.partno); } showPN(__sd.partno, sel); return; }
         }
       }
       var matched = null;
@@ -2806,10 +2836,15 @@ function applyPrintMethodOverride(sizeData, pricing){
     var t = (activeChips[i].textContent || '').trim();
     if(t.indexOf('雙面印刷') >= 0 || t.indexOf('雙面') >= 0) { isDual = true; break; }
   }
-  if(!isDual) return sizeData;
+  if(!isDual){
+    var _out = {}; for(var _k in sizeData){ _out[_k] = sizeData[_k]; }
+    _out.partno = resolveOptPartno(_out.partno);
+    return _out;
+  }
   var out = {};
   for(var k in sizeData){ out[k] = sizeData[k]; }
   if(sizeData.dualPartno) out.partno = sizeData.dualPartno;
+  out.partno = resolveOptPartno(out.partno);
   if(sizeData.dualSample !== undefined) out.sample = sizeData.dualSample;
   if(sizeData.dualPrices && sizeData.dualPrices.length){ out.prices = sizeData.dualPrices; }
   else if(sizeData.dualUpcharge != null && sizeData.prices){ out.prices = sizeData.prices.map(function(p){ return (p == null ? null : Math.round((p + sizeData.dualUpcharge) * 10) / 10); }); }
@@ -2952,7 +2987,7 @@ function renderSpecEdit(p) {
         <div class="spec-edit-hint" style="text-align:left;">💡 可設定第二個分類維度。例如「面數」→「單面／雙面」。<br><span style="opacity:.6;">留空或刪光選項即取消第二層。</span></div>
         <input type="text" class="qa-edit-input" id="spec2-label" value="${escHtml((getEffectiveSecondSpec(p)||{}).label || '')}" placeholder="規格名稱（留空=不使用第二層）" style="width:100%;margin-bottom:8px;box-sizing:border-box;">
         <div id="spec2-opts-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">
-          ${(((getEffectiveSecondSpec(p)||{}).options) || []).map((o, i) => render2ndOptRow(o, i)).join('')}
+          ${(((getEffectiveSecondSpec(p)||{}).options) || []).map((o, i) => render2ndOptRow(o, i, (getCustomOptPartnos(p.id)||{})[o] || '')).join('')}
         </div>
         <button onclick="spec2OptAdd()" class="qa-add-btn">＋ 新增選項</button>
       </div>
@@ -3374,6 +3409,13 @@ function specSave() {
     // 2nd tier (optional)
     if (spec2Label && spec2Opts.length) newGroups.push({label: spec2Label, options: spec2Opts});
     saveCustomSpecGroups(activeProduct.id, newGroups);
+    // Save per-option partnos for 2nd-tier
+    var optPns = typeof getCurrentSpec2Partnos === 'function' ? getCurrentSpec2Partnos() : [];
+    var pnMap = {};
+    for (var opi = 0; opi < spec2Opts.length; opi++) {
+      if (optPns[opi]) pnMap[spec2Opts[opi]] = optPns[opi];
+    }
+    saveCustomOptPartnos(activeProduct.id, pnMap);
   } catch(e) { console.warn('spec2 save failed', e); }
   showToast('✅ 規格已儲存！');
   renderSpecView(activeProduct);
