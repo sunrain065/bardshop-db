@@ -4415,7 +4415,7 @@ function renderPrintDiagram(p){
   card.style.display='';
   var ts=getTitleStyle();var sym=ts.symbol||'';var titleFz=ts.fontSize?ts.fontSize+'px':'10px';var titleColor=ts.color||'var(--text-dim)';
   var h='<div class="detail-card"><div class="detail-card-title"><div class="dct-left"><div class="dct-bar"></div>'+(sym?'<span style="font-size:16px;line-height:1;">'+sym+'</span>':'')+'<span class="dct-label" style="font-size:'+titleFz+';color:'+titleColor+';letter-spacing:2px;text-transform:uppercase;">印刷方式圖解</span></div></div>';
-  if(url)h+='<img src="'+url+'" style="max-width:100%;border-radius:6px;cursor:zoom-in;margin-top:8px;" onclick="openPrintLightbox(this.src)">';
+  if(url)h+='<img src="'+url+'" style="max-width:480px;width:100%;border-radius:6px;cursor:zoom-in;margin-top:8px;" onclick="openPrintLightbox(this.src)">';
   else h+='<div style="margin-top:8px;padding:12px;background:var(--surface2);border-radius:6px;color:var(--text-dim);font-size:12px;">尚未設定圖解圖片</div>';
   if(editUnlocked)h+='<div style="margin-top:8px;"><input id="print-diag-url" value="'+(url||'')+'" placeholder="輸入圖解圖片網址" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;box-sizing:border-box;"><button onclick="savePrintDiagram()" style="margin-top:6px;padding:4px 12px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;">💾 儲存</button></div>';
   h+='</div>';card.innerHTML=h;
